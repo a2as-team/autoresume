@@ -1,0 +1,465 @@
+manifest:
+  version: "0.1.3"
+  schema: https://a2as.org/cert/schema
+  subject:
+    name: aadya940/autoresume
+    source: https://github.com/aadya940/autoresume
+    branch: main
+    commit: "72b1ef72"
+    scope: [app/backend/src/ai/ats_optimizer.py, app/backend/src/ai/cover_letter.py, app/backend/src/ai/main.py, app/backend/src/ai/prompts.py,
+      app/backend/src/ai/utils.py]
+  issued:
+    by: A2AS.org
+    at: '2026-02-11T16:30:39Z'
+    url: https://a2as.org/certified/agents/aadya940/autoresume
+  signatures:
+    digest: sha256:m6C58smT8veS1D4y87KvlMn-Acc0VpybOlVmgzX7jjs
+    key: ed25519:qEbHBluDYCgS0scCyVi0cyiftgH4MNNK8JeKoTJPInw
+    sig: ed25519:_pEYLUhfL9F5UQO3gSUBimJS0Y_MI9qmPoUzpMQ_g-yfOaECgEOz5fIrRC110QhC3_UAZKY2t3FCCI4pQ6aHAQ
+
+agents:
+  agent.0:
+    type: instance
+    models: [gemini-2.5-flash]
+    params:
+      function: _get_runner
+      instance: agent
+  agent.1:
+    type: instance
+    models: [gemini-2.5-flash]
+    params:
+      function: _inject_keywords_with_llm
+      instance: agent
+  agent.2:
+    type: instance
+    models: [gemini-3-flash-preview]
+    params:
+      class: CoverLetterAgent
+      base: LlmAgent
+      name: cover_letter_agent
+      description: Generates professional cover letters following Harvard guidelines
+      planner: self._planner
+      instance: agent
+  agent.3:
+    type: instance
+    models: [gemini-3-flash-preview]
+    params:
+      class: KeywordInjectionAgent
+      base: LlmAgent
+      name: keyword_injection_agent
+      description: Injects ATS keywords into LaTeX resumes naturally
+      planner: planner
+      instance: agent
+  agent._extract_skills_with_llm:
+    type: factory
+    models: [gemini-2.5-flash]
+    params:
+      function: _extract_skills_with_llm
+  agent.SkillExtractionAgent:
+    type: class
+    models: [gemini-3-flash-preview]
+    params:
+      class: SkillExtractionAgent
+      base: LlmAgent
+      name: skill_extraction_agent
+      description: Extracts technical skills and tools from job descriptions
+      planner: BuiltInPlanner(thinking_config=types.ThinkingConfig())
+  coder_agent.0:
+    type: instance
+    models: [gemini-2.5-flash]
+    params:
+      function: get_runner
+      instance: coder_agent
+  coder_agent.1:
+    type: instance
+    models: [gemini-3-flash-preview]
+    params:
+      class: LatexCoderAgent
+      base: LlmAgent
+      name: latex_coder_agent
+      description: Updates the LaTeX code for a resume with additional information
+      planner: self._planner
+      instance: coder_agent
+
+models:
+  gemini-2.5-flash:
+    type: default
+    agents: [coder_agent.0, agent.0, agent._extract_skills_with_llm, agent.1]
+  gemini-3-flash-preview:
+    type: literal
+    agents: [coder_agent.1, agent.2, agent.SkillExtractionAgent, agent.3]
+
+imports:
+  '*': prompts.*
+  _extract_relevant_info: utils._extract_relevant_info
+  active_ats_tasks: ats_resume.active_ats_tasks
+  active_cover_letter_tasks: cover_letter.active_cover_letter_tasks
+  active_job_search_tasks: job_search.active_job_search_tasks
+  active_tasks: update.active_tasks
+  aiofiles: aiofiles
+  APIRouter: fastapi.APIRouter
+  append_and_compile: main.append_and_compile
+  asynccontextmanager: contextlib.asynccontextmanager
+  asyncio: asyncio
+  ats_resume_router: routes.ats_resume.ats_resume_router
+  BaseModel: pydantic.BaseModel
+  broker: task_queue.broker
+  build_editing_prompt: ai.prompts.build_editing_prompt
+  build_generic_prompt: ai.prompts.build_generic_prompt
+  build_job_optimize_prompt: ai.prompts.build_job_optimize_prompt
+  BuiltInPlanner: google.adk.planners.built_in_planner.BuiltInPlanner
+  clean_latex_block: utils.clean_latex_block
+  clear_link_cache: utils.clear_link_cache
+  clear_pdf: utils.clear_pdf
+  clear_resume_router: routes.clear_resume_router
+  clear_resume_task: task_queue.clear_resume_task
+  compile_tex: ai.utils.compile_tex
+  concurrent: concurrent
+  CORSMiddleware: fastapi.middleware.cors.CORSMiddleware
+  cover_letter_router: routes.cover_letter_router
+  CoverLetterGenerator: ai.cover_letter.CoverLetterGenerator
+  datetime: datetime.datetime
+  Dict: typing.Dict
+  FastAPI: fastapi.FastAPI
+  FileResponse: fastapi.responses.FileResponse
+  futures: concurrent.futures
+  generate_ats_resume_task: task_queue.generate_ats_resume_task
+  generate_cover_letter_task: task_queue.generate_cover_letter_task
+  HTTPException: fastapi.HTTPException
+  initialise_pdf: utils.initialise_pdf
+  InMemoryBroker: taskiq.InMemoryBroker
+  InMemorySessionService: google.adk.sessions.InMemorySessionService
+  job_search_router: routes.job_search.job_search_router
+  job_search_task: task_queue.job_search_task
+  JobMatcher: ai.jobs.JobMatcher
+  JobMatcherError: ai.jobs.JobMatcherError
+  json: json
+  JSONResponse: fastapi.responses.JSONResponse
+  List: typing.List
+  LlmAgent: google.adk.agents.LlmAgent
+  load_dotenv: dotenv.load_dotenv
+  logging: logging
+  lru_cache: functools.lru_cache
+  optimize_resume_for_job_task: task_queue.optimize_resume_for_job_task
+  Optional: typing.Optional
+  os: os
+  Path: pathlib.Path
+  pypandoc: pypandoc
+  questionnaire_router: routes.questionnaire.questionnaire_router
+  re: re
+  read_file: ai.utils.read_file
+  ResumeATSOptimizer: ai.ats_optimizer.ResumeATSOptimizer
+  ResumeParseError: ai.jobs.ResumeParseError
+  Runner: google.adk.runners.Runner
+  save_settings_router: routes.save_settings_router
+  serve_pdf_router: routes.serve_pdf_router
+  sse_router: routes.sse.sse_router
+  StreamingResponse: fastapi.responses.StreamingResponse
+  subprocess: subprocess
+  threading: threading
+  time: time
+  Tuple: typing.Tuple
+  types: google.genai.types
+  update_resume_router: routes.update_resume_router
+  update_resume_with_feedback_task: task_queue.update_resume_with_feedback_task
+  update_resume_with_links_task: task_queue.update_resume_with_links_task
+  update_resume_with_tex: task_queue.update_resume_with_tex
+  uvicorn: uvicorn
+  write_file: utils.write_file
+  yake: yake
+
+functions:
+  __init__:
+    type: sync
+    module: app.backend.src.ai.ats_optimizer
+    args: [self]
+  _cache_links:
+    type: async
+    module: app.backend.src.task_queue
+    args: [links]
+  _check_semantic_presence:
+    type: sync
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, keyword, resume_text]
+    params:
+      returns: bool
+  _extract_job_keywords:
+    type: sync
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, description]
+    params:
+      returns: List[str]
+  _extract_job_keywords_async:
+    type: async
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, description]
+    params:
+      returns: List[str]
+  _extract_job_keywords_yake:
+    type: sync
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, description]
+    params:
+      returns: List[str]
+  _extract_resume_info:
+    type: sync
+    module: app.backend.src.ai.cover_letter
+    args: [self, resume_text]
+    params:
+      returns: Dict
+  _extract_skills_with_llm:
+    type: async
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, description]
+    params:
+      returns: List[str]
+  _generate_async:
+    type: async
+    module: app.backend.src.task_queue
+  _get_llm_response:
+    type: async
+    module: app.backend.src.ai.cover_letter
+    args: [self, prompt]
+    params:
+      returns: str
+  _get_runner:
+    type: async
+    module: app.backend.src.ai.cover_letter
+    args: [self]
+  _humanize_text:
+    type: sync
+    module: app.backend.src.ai.cover_letter
+    args: [self, text]
+    params:
+      returns: str
+  _inject_keywords:
+    type: sync
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, resume_tex, keywords]
+    params:
+      returns: str
+  _inject_keywords_async:
+    type: async
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, resume_tex, keywords]
+    params:
+      returns: str
+  _inject_keywords_with_llm:
+    type: async
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, resume_tex, keywords]
+    params:
+      returns: str
+  _parse_resume_text:
+    type: sync
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, resume_path]
+    params:
+      returns: Tuple
+  _simple_inject_keywords:
+    type: sync
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, resume_tex, keywords]
+    params:
+      returns: str
+  append_and_compile:
+    type: async
+    module: app.backend.src.ai.main
+    args: [info, file_path, output_dir, prompt]
+  build_editing_prompt:
+    type: sync
+    module: app.backend.src.ai.prompts
+    args: [info, curr_code]
+  build_generic_prompt:
+    type: sync
+    module: app.backend.src.ai.prompts
+    args: [info, curr_code]
+  build_job_optimize_prompt:
+    type: sync
+    module: app.backend.src.ai.prompts
+    args: [job_description, curr_code]
+  clean_latex_block:
+    type: sync
+    module: app.backend.src.ai.utils
+    args: [text]
+    params:
+      returns: str
+  clear_resume:
+    type: async
+    module: app.backend.src.routes.clear
+  clear_resume_task:
+    type: sync
+    module: app.backend.src.task_queue
+  compile_tex:
+    type: sync
+    module: app.backend.src.ai.utils
+    args: [output_dir, file_path]
+  event_generator:
+    type: async
+    module: app.backend.src.routes.sse
+  generate:
+    type: async
+    module: app.backend.src.ai.cover_letter
+    args: [self, job_description, company, title, resume_path]
+    params:
+      returns: Dict
+  generate_ats_resume:
+    type: async
+    module: app.backend.src.routes.ats_resume
+    args: [request]
+  generate_ats_resume_task:
+    type: sync
+    module: app.backend.src.task_queue
+    args: [job_description, company, title]
+  generate_cover_letter:
+    type: async
+    module: app.backend.src.routes.cover_letter
+    args: [request]
+  generate_cover_letter_task:
+    type: sync
+    module: app.backend.src.task_queue
+    args: [job_description, company, title]
+  get_llm_response:
+    type: async
+    module: app.backend.src.ai.main
+    args: [prompt, runner]
+    params:
+      returns: str
+  get_resume_skills:
+    type: async
+    module: app.backend.src.routes.job_search
+  get_runner:
+    type: async
+    module: app.backend.src.ai.main
+  job_search_task:
+    type: sync
+    module: app.backend.src.task_queue
+    args: [resume_path, location, job_title, max_results, sites]
+  lifespan:
+    type: async
+    module: app.backend.src.main
+    args: [app]
+  optimize:
+    type: sync
+    module: app.backend.src.ai.ats_optimizer
+    args: [self, job_description, company, title, resume_path]
+    params:
+      returns: Dict
+  optimize_resume_for_job_task:
+    type: sync
+    module: app.backend.src.task_queue
+    args: [job_link]
+  read_file:
+    type: sync
+    module: app.backend.src.ai.utils
+    args: [path]
+  run_worker:
+    type: sync
+    module: app.backend.src.task_queue
+  search_jobs:
+    type: async
+    module: app.backend.src.routes.job_search
+    args: [request]
+  sse_endpoint:
+    type: async
+    module: app.backend.src.routes.sse
+  update_ats_resume:
+    type: async
+    module: app.backend.src.routes.ats_resume
+    args: [request]
+  update_cover_letter:
+    type: async
+    module: app.backend.src.routes.cover_letter
+    args: [request]
+  update_resume:
+    type: async
+    module: app.backend.src.routes.update
+    args: [payload]
+  update_resume_with_feedback_task:
+    type: sync
+    module: app.backend.src.task_queue
+    args: [feedback]
+  update_resume_with_links_task:
+    type: sync
+    module: app.backend.src.task_queue
+    args: [links]
+  update_resume_with_tex:
+    type: sync
+    module: app.backend.src.task_queue
+    args: [tex_content]
+  validate_assets_directory:
+    type: sync
+    module: app.backend.src.ai.main
+  write_file:
+    type: sync
+    module: app.backend.src.ai.utils
+    args: [path, content]
+
+variables:
+  GOOGLE_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [app.backend.src.ai.cover_letter]
+
+files:
+  assets/cover_letter.tex:
+    type: literal
+    actions: [read]
+    params:
+      caller: [_generate_async]
+  assets/custom_template.tex:
+    type: literal
+    actions: [write]
+    params:
+      caller: [update_resume]
+  assets/link_cache.txt:
+    type: literal
+    actions: [read]
+    params:
+      caller: [_cache_links, update_resume]
+  assets/template_preference.txt:
+    type: literal
+    actions: [write]
+    params:
+      caller: [update_resume]
+  assets/user_file.tex:
+    type: literal
+    actions: [read, write]
+    params:
+      caller: [generate, open, update_resume_with_tex, _generate_async, optimize, get_resume_skills, search_jobs]
+  assets_dir:
+    type: literal
+    actions: [read, write]
+    params:
+      caller: [Path(assets), assets_dir.mkdir]
+  path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path]
+  resume_path:
+    type: literal
+    actions: [read]
+    params:
+      caller: [Path('assets/user_file.tex'), Path, open]
+  template_path:
+    type: literal
+    actions: [read, write]
+    params:
+      caller: [Path('assets/cover_letter.tex'), template_path.parent.mkdir, open]
+  tex_path:
+    type: variable
+    actions: [write]
+    params:
+      caller: [open]
+      alias: [f]
+
+processes:
+  pdflatex:
+    type: shell
+    actions: [exec]
+    args: [[-interaction=nonstopmode, '-output-directory={output_dir}', file_path]]
+    params:
+      caller: [subprocess.run]
+      shell: ["False"]
